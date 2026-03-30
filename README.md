@@ -8,7 +8,7 @@
 
 **OptiAgent** 是一个专为光学工程师和研究人员打造的**复合型 RAG (检索增强生成) 智能体系统**。采用基于 **LangGraph** 有向图的状态机架构，专为处理大规模复杂光学系统手册、镜头玻璃库及宏代码参数设计。
 
-> 💡 **核心优势：专为 HPC 和军工内网脱水部署设计。** 完整剥离在线 API 依赖，通过自研的 PyMuPDF 启发式逻辑截断引擎解决极度受限断网设备的 RAG 幻觉，无需云端 GPU 也能高速运行。
+> 💡 **核心优势：专为 HPC 和内网脱水部署设计。** 完整剥离在线 API 依赖，通过 PyMuPDF 启发式逻辑截断引擎解决极度受限断网设备的 RAG 幻觉，无需云端 GPU 也能高速运行。
 
 ---
 
@@ -33,9 +33,9 @@
 ## 🌟 核心独创功能 (Features)
 
 1. **纯净的离线 HPC 适配 (Offline-First for HPC):**
-   完全抛弃了极其臃肿的 `Unstructured` 生态依赖链（往往引发无数 Linux 核心缺失），利用轻量级库加模型推理，可在超算/封闭服务器环境中丝滑独立运行。（自带自动化 Wheels 集成上传脚本）。
+   完全抛弃了极其臃肿的 `Unstructured` 等生态依赖链，利用轻量级库加模型推理，可在超算/封闭服务器环境中丝滑独立运行。（自带自动化 Wheels 集成上传脚本）。
 2. **启发式隐式脊梁重建引擎 (ISR 抽取引擎):**
-   在处理 PDF 数据提取与注入库时，不再“定长硬切”，而是采用类似于 SpineDoc 的思想：**跨页合并章节化知识簇**。利用版面字号分析自动感知文档脊梁防折断，极大提升大模型摄入 RAG 参数信息的完备性。
+   在处理 PDF 数据提取与注入库时，不再“定长硬切”，而是采用类似于 [SpineDoc](https://github.com/yjh2222332024/spine-open) 的思想：**跨页合并章节化知识簇**。利用版面字号分析自动感知文档脊梁防折断，极大提升大模型摄入 RAG 参数信息的完备性。
 3. **混合检索引擎与重排 (Hybrid RRF + BGE Reranker):**
    面对光学领域的大量零件与缩写（如 N-BK7, MTF），抛弃单一向量算法的劣势。结合了 **BM25 倒排索引找精准词**与 **BGE 本地小模型寻找语义拓展**。最后经特征倒数关联融合 (RRF)，交由 `bge-reranker-base` 进行二次精排去噪，Top 3 送入模型！
 4. **LangGraph 工业级状态流总线:**
@@ -47,7 +47,12 @@
 
 ## 📂 项目模块地图
 
-*   **`data_prep/` (知识摄入引擎):**
+*   **`data/` (原生知识库核心)**: 包含所有系统解析所需的光学手册材料。
+    *   `CamLibrary/`: 标准镜头库语料字典。
+    *   `Glasscat/`: 主流厂商的光学玻璃参数库。
+    *   `Macro/`: 光学软件宏代码语法与案例文件。
+    *   `Manual/`: 用户自定义增补的大型说明书。
+*   **`data_prep/` (知识摄入引擎)**:
     *   `parse_pdf.py`: 【数据管道入口】负责遍历目录下所有的光学手册与文献，进行提取、分块聚合、打上来源标签 Metadata，并将最终的高质量晶体注入本地 ChromaDB。
 *   **`tools/` (Agent 手脚扩展):**
     *   `rag_tool.py`: 定义对外暴露的高级搜索函数，包含上述混合搜索与重排序算法，它是整个系统能够“认字”的关键。
@@ -70,18 +75,17 @@
 推荐使用 Python 3.10+ 环境。您可以克隆本仓库后：
 
 ```bash
-git clone https://github.com/your-username/OptiAgent.git
+git clone https://github.com/LyraZeta/OptiAgent.git
 cd OptiAgent
 
 # 使用 pip 快速安装
 pip install -r requirements.txt
 ```
 
-*(也附带了 `optiagent_env.yml` 供 conda 重度使用者快速复刻底层。)*
-
 ### 2. 配置大模型接入环境变量
 
-在根目录下创建（或基于现有） `.env` 文件。虽然 RAG 参数查询全离线，但这套系统仍然需要一个智慧极高的核心大脑(如通过 vLLM 本地部署模型 或 第三方 API):
+在根目录下创建（或基于现有） `.env` 文件。虽然 RAG 参数查询全离线，但这套系统仍然需要一个智慧极高的核心大脑 (如通过 vLLM 本地部署模型 或 第三方 API)。
+> *推荐的免费兼容 API 供应商：[AIHubMix Console](https://console.aihubmix.com/)*
 
 ```dotenv
 # 主要模型
@@ -89,7 +93,7 @@ LLM_MODEL = "模型名称"
 OPENAI_COMPAT_BASE_URL = "https://你的接口地址/v1"
 OPENAI_COMPAT_API_KEY = "你的 API Key"
 
-# 用于评估模型
+# 用于评估模型（可与主要模型相同）
 EMBEDDING_LLM_MODEL = "模型名称"
 EMBEDDING_OPENAI_COMPAT_BASE_URL = "https://你的接口地址/v1"
 EMBEDDING_OPENAI_COMPAT_API_KEY = "你的 API Key"
