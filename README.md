@@ -58,7 +58,8 @@
     *   `evaluate.py`: 利用 Ragas 框架进行的防幻觉评分工具。
 *   **根目录工具与前端:**
     *   `app.py`: Streamlit 用户交互入口（带内部运算面板）。
-    *   `deploy_env_to_server.sh` / `deploy_wheels.sh`: 超算自动化部署组件。
+*   **`hpc_scripts/` (超算离线部署):**
+    *   包含所有自动化部署组件脚本。**若需要在无网络的高性能计算 (HPC) 运行，可以使用该文件夹内的脚本**实现底层依赖无网安装、向量权重上传以及多节点任务下发等能力（如 `deploy_wheels.sh` 等）。
 
 ---
 
@@ -83,9 +84,15 @@ pip install -r requirements.txt
 在根目录下创建（或基于现有） `.env` 文件。虽然 RAG 参数查询全离线，但这套系统仍然需要一个智慧极高的核心大脑(如通过 vLLM 本地部署模型 或 第三方 API):
 
 ```dotenv
-LLM_MODEL=deepseek-chat
-OPENAI_COMPAT_BASE_URL=https://api.deepseek.com/v1
-OPENAI_COMPAT_API_KEY=your_llm_api_key_here
+# 主要模型
+LLM_MODEL = "模型名称"
+OPENAI_COMPAT_BASE_URL = "https://你的接口地址/v1"
+OPENAI_COMPAT_API_KEY = "你的 API Key"
+
+# 用于评估模型
+EMBEDDING_LLM_MODEL = "模型名称"
+EMBEDDING_OPENAI_COMPAT_BASE_URL = "https://你的接口地址/v1"
+EMBEDDING_OPENAI_COMPAT_API_KEY = "你的 API Key"
 ```
 
 ### 3. 数据初始化入库 (关键)
@@ -106,6 +113,20 @@ streamlit run app.py
 ```
 
 终端会弹出本地网页端口 (默认 `http://localhost:8501`)，你现在可以向它询问复杂的镜头理论与操作指南，并随时打开其折叠面板监督它的查表细节！
+
+### 5. 高性能计算 (HPC) 离线运行
+
+**若需要在无网络的高性能计算集群运行，可以使用 `hpc_scripts/` 文件夹下提供的环境分发脚本。**
+由于超算普遍没有外网，您可以先在本地连网机器下载好所需 Python 环境的源包（`.whl`），然后使用该目录下的脚本（如 `deploy_wheels.sh` 和 `deploy_env_to_server.sh`）以 `rsync` 打包上传并冷部署。
+
+脚本使用环境变量，执行前请配置：
+```bash
+export HPC_USER=your_username
+export HPC_HOST=your_hpc_address
+
+# 随后运行任一部署脚本，如：
+bash hpc_scripts/deploy_to_server.sh
+```
 
 ---
 
