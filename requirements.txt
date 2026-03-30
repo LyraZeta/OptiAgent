@@ -1,0 +1,17 @@
+langchain>=0.2.0
+langchain-core>=0.2.0
+langchain-community>=0.2.0
+langchain-openai>=0.1.0
+langchain-huggingface>=0.0.3
+langchain-classic
+langchain-chroma
+langgraph>=0.1.0
+streamlit>=1.30.0
+python-dotenv>=1.0.0
+chromadb>=0.5.0
+sentence-transformers
+PyMuPDF
+pypdf
+ragas>=0.2.0
+pandas
+datasets
