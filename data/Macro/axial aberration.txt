@@ -1,0 +1,64 @@
+!轴上像差
+!
+!Written by JayXing 6/12/2016
+!
+!This macro is the marginal spherical aberration 、zonal spherical aberration and residual spherical abberation
+!
+n=NSUR() 
+!主光线边缘孔径球差
+RAYTRACE 0,0,0,0.0001,PWAV()  #主波长近轴光线追迹
+l0=RAYY(n)                    #主波长近轴光线下像面上的y坐标
+nz0=RAYN(n)                   #主波长近轴光线在像面Z方向上的方向余弦
+l0=l0/TANG(ACOS(nz0))         #主波长近轴光线与光轴的交点到像面的距离
+RAYTRACE 0,0,0,1,PWAV()       #主波长追迹边缘追迹
+l1=RAYY(n)                    #主波长边缘光线下像面上的y坐标
+nz=RAYN(n)                    #主波长边缘光线在像面Z方向上的方向余弦
+l1=l1/TANG(ACOS(nz))          #主波长边缘光线与光轴的交点到像面的距离
+lh=l1-l0                      #主波长边缘孔径球差
+!主光线剩余球差
+RAYTRACE 0,0,0,0.707,PWAV()   #主波长追迹0.707d带光线追迹
+l1sn=RAYY(n)
+nzsn=RAYN(n)
+l1sn=l1sn/TANG(ACOS(nzsn))
+l0707=l1sn-l0                 #主波长0.707带孔径球差
+lsn=l1sn-(l1+l0)/2            #主波长光线剩余球差
+!边缘色差
+RAYTRACE 0,0,0,1,1            #光线1边缘光线追迹
+la=RAYY(n)
+naz=RAYN(n)
+la=la/TANG(ACOS(naz))
+RAYTRACE 0,0,0,1,NWAV()       #光线3边缘光线追迹
+lb=RAYY(n)
+nbz=RAYN(n)
+lb=lb/TANG(ACOS(nbz))
+lab=la-lb                     #边缘色差
+!0.707孔径色差
+RAYTRACE 0,0,0,0.707,1
+lad=RAYY(n)
+nadz=RAYN(n)
+lad=lad/TANG(ACOS(nadz))
+RAYTRACE 0,0,0,0.707,NWAV()
+lbd=RAYY(n)
+nbdz=RAYN(n)
+lbd=lbd/TANG(ACOS(nbdz))
+labd=lad-lbd
+!色球差
+RAYTRACE 0,0,0,0.0001,1
+las=RAYY(n)
+nasz=RAYN(n)
+las=las/TANG(ACOS(nasz))
+RAYTRACE 0,0,0,0.0001,NWAV()
+lbs=RAYY(n)
+nbsz=RAYN(n)
+lbs=lbs/TANG(ACOS(nbsz))
+labs=las-lbs
+labs=lab-labs
+PRINT 
+PRINT "Edge aberration:",lh
+PRINT "Residual spherical aberration:",lsn
+PRINT "Edge color difference:",lab
+PRINT "Chromospheric differential:",labs
+PRINT "0.707 spherical aberration of aperture:",l0707
+PRINT "0.707 aperture color difference:",labd
+PRINT
+PRINT "ALL DONE!"
