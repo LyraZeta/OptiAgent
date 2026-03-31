@@ -1,4 +1,4 @@
-# 🔭 OptiAgent: 离线驱动的光学设计领域 AI 智能体
+# 🔭 OptiAgent: 基于本地知识引擎的光学设计领域 AI 智能体
 
 [![Python 3.10](https://img.shields.io/badge/python-3.10-blue.svg)](https://www.python.org/downloads/release/python-3100/)
 [![LangGraph](https://img.shields.io/badge/LangGraph-Agent%20Workflow-orange)](https://python.langchain.com/docs/langgraph)
@@ -8,7 +8,7 @@
 
 **OptiAgent** 是一个专为光学工程师和研究人员打造的**复合型 RAG (检索增强生成) 智能体系统**。采用基于 **LangGraph** 有向图的状态机架构，专为处理大规模复杂光学系统手册、镜头玻璃库及宏代码参数设计。
 
-> 💡 **核心优势：专为 HPC 和内网脱水部署设计。** 完整剥离在线 API 依赖，通过 PyMuPDF 启发式逻辑截断引擎解决极度受限断网设备的 RAG 幻觉，无需云端 GPU 也能高速运行。
+> 💡 **核心优势：专为涉密数据保护与 HPC 部署设计。** 实现了核心知识获取与检索流的完全本地化计算，通过 PyMuPDF 启发式逻辑截断引擎解决 RAG 幻觉，无需依赖云端处理沉重的隐私工程图纸数据。但目前仍需外接大模型推理 API 才可高速完成整体工作流，使用本地部署 LLM 可实现完全离线。
 
 ---
 
@@ -32,8 +32,8 @@
 
 ## 🌟 核心独创功能 (Features)
 
-1. **纯净的离线 HPC 适配 (Offline-First for HPC):**
-   完全抛弃了极其臃肿的 `Unstructured` 等生态依赖链，利用轻量级库加模型推理，可在超算/封闭服务器环境中丝滑独立运行。（自带自动化 Wheels 集成上传脚本）。
+1. **纯净的数据端离线处理与 HPC 适配 (Offline-Data pipeline for HPC):**
+   完全抛弃了极其臃肿的 `Unstructured` 等生态依赖链，利用轻量级库加小参数模型推理（用于本地 Embedding/Rerank），使最繁重的涉密文档预处理与高频知识检索可在超算/封闭服务器环境中完全离线运行。（自带自动化 Wheels 集成上传脚本）。
 2. **启发式隐式脊梁重建引擎 (ISR 抽取引擎):**
    在处理 PDF 数据提取与注入库时，不再“定长硬切”，而是采用类似于 [SpineDoc](https://github.com/yjh2222332024/spine-open) 的思想：**跨页合并章节化知识簇**。利用版面字号分析自动感知文档脊梁防折断，极大提升大模型摄入 RAG 参数信息的完备性。
 3. **混合检索引擎与重排 (Hybrid RRF + BGE Reranker):**
