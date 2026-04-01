@@ -1,7 +1,7 @@
 """
 主前端应用程序 (Step 8)。
 
-【面试亮点 / 核心方法】：
+【核心方法】：
 1. 采用了 Streamlit 快速构建交互式 Web UI。
 2. 引入了“可解释性”设计：通过 `st.expander` (折叠面板) 截获并展示 Agent 的中间思考过程（Tool Calls、SQL语句、检索来源等）。这在工业落地中极大地提升了用户对 AI 系统的信任度，也是面试官非常看重的“工程化思维与黑盒透明化”。
 """
@@ -106,7 +106,7 @@ if user_query:
             if not reasoning_content and hasattr(m, 'response_metadata'):
                 reasoning_content = m.response_metadata.get("model_extra", {}).get("reasoning_content", "") or m.response_metadata.get("reasoning_content", "")
             
-            if reasoning_content:
+            if reasoning_content:   # reasoning_content 可能是模型的思考过程、SQL语句、工具调用决策等，直接记录在 thought_log 里，供前端展示
                 thought_log += f"**🧠 模型内部推理思考:**\n{reasoning_content}\n\n"
 
             # 兼容：部分大模型API会将思考过程写在正文的 <think>...</think> 中

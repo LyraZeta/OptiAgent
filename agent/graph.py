@@ -1,7 +1,7 @@
 """
 智能体工作流设计核心状态机 (Step 6 & 7)。
 
-【面试亮点 / 核心方法】：
+【核心方法】：
 1. 【先进的框架范式】：告别 LangChain 老旧且极难 debug 的 `AgentExecutor` 黑盒，全面拥抱 【LangGraph 细粒度有向图状态流】。
 2. 【原生工具调用】：采用大模型原生的 `bind_tools` (Tool Calling / Function Calling 功能)，抛弃了原先靠大模型生成 JSON 解释的硬编码方式，调用极其稳定。
 3. 【可视化图节点与流路由】：清晰定义图论层面的节点（Nodes：大模型主推理点 agent_node 和 工具执行点 tool_node）和条件边（Conditional Routing： `should_continue` 判断逻辑）。让整个复杂 AI 任务的流转不仅性能卓越，还能完美落成项目架构图，是今年最流行的 Agent 端到端组装写法。
@@ -24,14 +24,14 @@ from tools.rag_tool import search_optics_manual
 # search_optics_manual：用于语义检索光学原理和PDF公式（RAG模式）
 tools = [search_optics_manual]
 
-LLM_MODEL = os.getenv("LLM_MODEL", "gemini-3-flash-preview-free")
-OPENAI_COMPAT_BASE_URL = os.getenv("OPENAI_COMPAT_BASE_URL", "https://aihubmix.com/v1")
+LLM_MODEL = os.getenv("LLM_MODEL")
+OPENAI_COMPAT_BASE_URL = os.getenv("OPENAI_COMPAT_BASE_URL")
 OPENAI_COMPAT_API_KEY = os.getenv("OPENAI_COMPAT_API_KEY")
 LLM_TIMEOUT_SECONDS = 240
-LLM_MAX_RETRIES = 1
+LLM_MAX_RETRIES = 1 # 适当设置重试次数
 
 # Step 6: 定义Tool Calling绑定到主要大模型
-# 这里使用您配置的 gemini-3-flash-preview-free，通过 bind_tools 为大语言模型赋予工具识别与调用能力。
+# 通过 bind_tools 为大语言模型赋予工具识别与调用能力。
 llm = ChatOpenAI(
     model_name=LLM_MODEL,
     temperature=0,
@@ -45,7 +45,7 @@ llm = ChatOpenAI(
 # 这一步是使得传统闲聊模型升级为 Agent 的临门一脚。
 # 底层实现是把 python 函数的 params schema（通过 Pydantic 推导）转换为对应的 JSON Schema 结构，
 # 注册进入大模型 API 的 params.tools 发送给服务端。告诉模型：“你有这些额外的外挂抓手”。
-llm_with_tools = llm.bind_tools(tools)
+llm_with_tools = llm.bind_tools(tools)  # 现在这个 llm_with_tools 就是一个升级版的智能体大脑了，具备了识别工具调用意图并触发工具执行的能力。
 
 # Step 7: 绘制 LangGraph 状态机及各节点处理逻辑
 
@@ -114,14 +114,12 @@ workflow = StateGraph(AgentState)
 
 # 定义核心节点
 # 1. 大模型推理节点
-workflow.add_node("agent", agent_node)
+workflow.add_node("agent", agent_node)  # add_node 的第二个参数是一个函数，这个函数定义了这个节点在执行时会发生什么。这里我们传入了上面定义的 agent_node 函数，告诉状态机在这个节点上要执行的逻辑。
 # 2. 从 prebuilt 库直接加载极轻量级的内置工具执行节点
-# 它会自动解析 message 里的 function calling 要求，去执行并收集运行结果转为 tool_message
-tool_node = ToolNode(tools)
+tool_node = ToolNode(tools) # ToolNode 是 LangGraph 提供的一个预构建节点类型，把之前定义好的工具列表传给它，它就知道在接到工具调用请求时应该怎么做了。
 workflow.add_node("tools", tool_node)
 
-# 设置网络结构和走向边
-workflow.set_entry_point("agent")
+workflow.set_entry_point("agent")   # 指定状态机的入口节点是 "agent"，也就是大模型推理节点。
 
 # 条件路由：从 agent 出发，根据 should_continue() 判断走工具环境还是直接结束对话。
 workflow.add_conditional_edges(
